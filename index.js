@@ -217,7 +217,7 @@ app.post("/webhook", async (req, res) => {
     await sendReaction(from, messageId, reaction);
 
     // Simulate typing delay (3-5 seconds for natural feel)
-    const delay = Math.floor(Math.random() * 2000) + 3000;
+    const delay = Math.floor(Math.random() * 2000);
     await new Promise(resolve => setTimeout(resolve, delay));
 
     log(`📤 Sending reply`);
