@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/webhook",
+      "dest": "index.js"
+    },
+    {
+      "src": "/health",
+      "dest": "index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "index.js"
+    }
+  ],
+  "env": {
+    "WA_TOKEN": "@wa_token",
+    "PHONE_ID": "@phone_id",
+    "VERIFY_TOKEN": "@verify_token"
+  }
+}

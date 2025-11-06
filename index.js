@@ -3,7 +3,7 @@
 import express from "express";
 import axios from "axios";
 import "dotenv/config";
-import { readFileSync } from "fs";
+import messagesData from "./messages.json" assert { type: "json" };
 
 const app = express();
 app.use(express.json());
@@ -13,9 +13,6 @@ const token = process.env.WA_TOKEN;
 const phoneID = process.env.PHONE_ID;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const API_URL = `https://graph.facebook.com/v24.0/${phoneID}/messages`;
-
-// Load messages from JSON
-const messagesData = JSON.parse(readFileSync('./messages.json', 'utf-8'));
 
 const processedMessages = new Set();
 
