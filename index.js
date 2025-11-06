@@ -3,62 +3,62 @@
 import express from "express";
 import axios from "axios";
 import "dotenv/config";
+import { readFileSync } from "fs";
 
 const app = express();
 app.use(express.json());
 
-const token = process.env.WA_TOKEN ;
-const phoneID = process.env.PHONE_ID ;
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN ;
+// Environment variables
+const token = process.env.WA_TOKEN;
+const phoneID = process.env.PHONE_ID;
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const API_URL = `https://graph.facebook.com/v24.0/${phoneID}/messages`;
+
+// Load messages from JSON
+const messagesData = JSON.parse(readFileSync('./messages.json', 'utf-8'));
 
 const processedMessages = new Set();
 
-const commands = {
-  harga: `*Daftar Harga Produk*\n\n` +
-         `• Produk A: Rp 100.000\n` +
-         `• Produk B: Rp 200.000\n` +
-         `• Produk C: Rp 350.000\n\n` +
-         `_Harga belum termasuk ongkir_`,
-  
-  promo: `*Promo Bulan Ini*\n\n` +
-         `• Diskon 20% untuk pembelian >Rp 500.000\n` +
-         `• Gratis ongkir minimal Rp 300.000\n` +
-         `• Buy 2 Get 1 untuk Produk A\n\n` +
-         `_Promo berlaku hingga akhir bulan_`,
-  
-  help: `*Selamat datang di Chatbot Kami!*\n\n` +
-        `Ketik perintah berikut:\n` +
-        `• *harga* - Lihat daftar harga\n` +
-        `• *promo* - Lihat promo terbaru\n` +
-        `• *kontak* - Hubungi customer service\n` +
-        `• *help* - Tampilkan menu ini`,
-  
-  kontak: `*Hubungi Kami*\n\n` +
-          `WhatsApp: 0812-3456-7890\n` +
-          `Email: info@example.com\n` +
-          `Jam operasional: 09.00 - 17.00 WIB`,
-};
+// Utility: Replace placeholders in message
+function replacePlaceholders(message) {
+  return message
+    .replace('{{ebook_link}}', messagesData.ebook_link)
+    .replace('{{bonus_link}}', messagesData.bonus_link)
+    .replace('{{konsultan_wa}}', messagesData.konsultan_wa);
+}
 
+// Utility: Log with timestamp
 function log(message, data = "") {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] ${message}`, data);
 }
 
+// Get reply based on user input
 function getReply(text) {
   const normalizedText = text.toLowerCase().trim();
   
-  for (const [keyword, response] of Object.entries(commands)) {
-    if (normalizedText.includes(keyword)) {
-      return response;
+  // Check for keyword matches
+  const keywords = ['mulai', 'tips', 'bonus', 'autopilot', 'konsultasi', 'help'];
+  
+  for (const keyword of keywords) {
+    if (normalizedText === keyword || normalizedText.includes(keyword)) {
+      const response = messagesData.funnel[keyword];
+      return {
+        message: replacePlaceholders(response.message),
+        reaction: response.reaction
+      };
     }
   }
   
-  return `Halo! Terima kasih sudah menghubungi kami.\n\n` +
-         `Ketik *help* untuk melihat menu yang tersedia.`;
+  // Default to welcome message
+  const welcome = messagesData.funnel.welcome;
+  return {
+    message: replacePlaceholders(welcome.message),
+    reaction: welcome.reaction
+  };
 }
 
-// Utility: Send WhatsApp message
+// Send WhatsApp message
 async function sendMessage(to, body) {
   try {
     const response = await axios.post(
@@ -77,14 +77,15 @@ async function sendMessage(to, body) {
         },
       }
     );
-    log(`✅ Message sent to ${to}`, response.data);
+    log(`✅ Message sent to ${to}`);
+    return response.data;
   } catch (err) {
     log(`❌ Error sending message:`, err.response?.data || err.message);
     throw err;
   }
 }
 
-// Utility: Mark message as read
+// Mark message as read
 async function markAsRead(messageId) {
   try {
     await axios.post(
@@ -107,7 +108,7 @@ async function markAsRead(messageId) {
   }
 }
 
-// Utility: Send reaction
+// Send reaction
 async function sendReaction(to, messageId, emoji) {
   try {
     await axios.post(
@@ -171,14 +172,14 @@ app.post("/webhook", async (req, res) => {
     const value = change?.value;
     const message = value?.messages?.[0];
 
-    // Not a message event (could be status update, etc.)
+    // Not a message event
     if (!message) {
       return;
     }
 
     // Check for duplicate messages
     if (processedMessages.has(message.id)) {
-      log(`Duplicate message ignored: ${message.id}`);
+      log(`⚠️  Duplicate message ignored: ${message.id}`);
       return;
     }
     
@@ -191,29 +192,31 @@ app.post("/webhook", async (req, res) => {
     const textBody = message.text?.body || "";
     const messageId = message.id;
 
-    log(`Incoming message`, {
+    log(`📩 Incoming message`, {
       from,
       type,
       body: textBody,
       id: messageId
     });
 
-    // Only handle text messages for now
+    // Only handle text messages
     if (type !== "text") {
-      log(`Unsupported message type: ${type}`);
-      await sendMessage(from, "Maaf, saat ini bot hanya bisa membalas pesan teks.");
+      log(`⚠️  Unsupported message type: ${type}`);
+      await sendMessage(from, messagesData.errors.unsupported_type);
       return;
     }
 
+    // Get appropriate reply based on funnel
+    const { message: reply, reaction } = getReply(textBody);
+
     // Send reaction to acknowledge receipt
-    await sendReaction(from, messageId, "👀");
+    await sendReaction(from, messageId, reaction);
 
-    // Get appropriate reply
-    const reply = getReply(textBody);
+    // Simulate typing delay (3-5 seconds for natural feel)
+    const delay = Math.floor(Math.random() * 2000) + 3000;
+    await new Promise(resolve => setTimeout(resolve, delay));
 
-    // Small delay to simulate typing (optional)
-    await new Promise(resolve => setTimeout(resolve, 500));
-log(`Sending reply: ${reply}`);
+    log(`📤 Sending reply`);
 
     // Send reply
     await sendMessage(from, reply);
@@ -230,6 +233,7 @@ log(`Sending reply: ${reply}`);
 app.get("/health", (req, res) => {
   res.json({ 
     status: "ok", 
+    bot: "Jalan Pintas Juragan Photobox",
     timestamp: new Date().toISOString(),
     cacheSize: processedMessages.size
   });
@@ -238,7 +242,8 @@ app.get("/health", (req, res) => {
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  log(`Server running on port ${PORT}`);
-  log(`WhatsApp Phone ID: ${phoneID}`);
-  log(`Webhook URL: http://localhost:${PORT}/webhook`);
+  log(`🚀 Server running on port ${PORT}`);
+  log(`📱 WhatsApp Phone ID: ${phoneID}`);
+  log(`🔗 Webhook URL: http://localhost:${PORT}/webhook`);
+  log(`💬 Bot: Jalan Pintas Juragan Photobox - Funnel Ready!`);
 });

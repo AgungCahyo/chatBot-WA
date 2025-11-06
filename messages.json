@@ -1,0 +1,41 @@
+{
+  "ebook_link": "https://lynk.id/your-ebook-link",
+  "bonus_link": "https://drive.google.com/your-bonus-link",
+  "konsultan_wa": "https://wa.me/628123456789",
+  
+  "funnel": {
+    "welcome": {
+      "message": "Hai, Juragan! 👋\nTerima kasih sudah tertarik sama Ebook Jalan Pintas Juragan Photobox 📸\n\nEbook ini bakal bantu kamu bikin photobox sendiri modal di bawah 5 juta dengan margin sampai 90%!\n\nKetik aja *\"MULAI\"* kalau kamu mau saya kirim link ebook-nya sekarang ✅",
+      "reaction": "👋"
+    },
+    "mulai": {
+      "message": "Mantap! 🔥\nIni link untuk download Ebook-nya:\n👉 {{ebook_link}}\n\n📚 Ebook ini berisi 7 bab lengkap: dari cara rakit booth, hitung HPP, sampai strategi viral di TikTok.\n\n🎁 Bonus buat kamu:\nGunakan kode *EBOOKKLIK2025* buat dapetin voucher upgrade franchise Klak Klik Kluk.\n\nMau saya bantu kasih tips biar kamu bisa BEP dalam waktu <30 hari?\nBalas aja *\"TIPS\"* ya 💸",
+      "reaction": "🔥"
+    },
+    "tips": {
+      "message": "Oke, Juragan! Nih strategi cepat biar photobox kamu langsung cuan:\n\n1️⃣ Pilih lokasi \"low budget, high traffic\": depan kampus, laundry koin, atau kafe estetik.\n2️⃣ Gunakan frame photostrip pastel atau vintage (favorit Gen Z banget).\n3️⃣ Ajak pelanggan share hasil foto ke TikTok pakai hashtag #JuraganPhotoboxChallenge.\n\nKalau kamu mau saya kirim template frame Canva dan kalkulator BEP Excel, balas aja: *\"BONUS\"* 📦",
+      "reaction": "💡"
+    },
+    "bonus": {
+      "message": "Siap! 😎\nNih bonus spesial buat pembaca Ebook:\n📂 Template Canva (50+ desain frame photobox)\n📊 Kalkulator HPP & BEP otomatis\n\n🎁 Bonus ini bisa kamu klaim di sini:\n👉 {{bonus_link}}\n\nBTW, banyak pembaca Ebook ini yang akhirnya naik kelas jadi Juragan Autopilot Klak Klik Kluk 🔥\n\nMau saya kirim infonya biar kamu tahu bedanya sistem manual vs autopilot?\nBalas *\"AUTOPILOT\"* 🚀",
+      "reaction": "🎁"
+    },
+    "autopilot": {
+      "message": "Mantap, Juragan 💪\nSistem Klak Klik Kluk Autopilot bikin bisnis photobox kamu jalan 24 jam tanpa dijaga.\n\n✅ Pembayaran QRIS otomatis\n✅ Laporan POS real-time di HP\n✅ Video viral langsung share ke TikTok\n✅ Support teknis jarak jauh\n\n🔖 Pakai kode *EBOOKKLIK2025* buat dapet bonus tambahan saat join franchise.\n\nMau saya hubungkan langsung ke tim konsultan Klak Klik Kluk biar kamu bisa tanya-tanya paketnya?\nBalas aja *\"KONSULTASI\"* 📞",
+      "reaction": "🚀"
+    },
+    "konsultasi": {
+      "message": "Oke, saya hubungkan kamu ke tim konsultan kami ya 👩‍💼\nMereka siap bantu jelaskan detail paket, simulasi modal, dan lokasi strategis.\n\nKlik tombol ini biar langsung ngobrol via WA:\n👉 {{konsultan_wa}}\n\nSemangat, Juragan! Waktunya ubah photobox jadi mesin uang autopilot 💰",
+      "reaction": "📞"
+    },
+    "help": {
+      "message": "*Menu Chatbot Jalan Pintas Juragan Photobox*\n\nKetik perintah berikut:\n• *MULAI* - Download ebook gratis\n• *TIPS* - Strategi cepat BEP <30 hari\n• *BONUS* - Dapatkan template & kalkulator\n• *AUTOPILOT* - Info sistem franchise autopilot\n• *KONSULTASI* - Hubungi tim konsultan\n• *HELP* - Tampilkan menu ini\n\nSiap bantu kamu jadi Juragan Photobox! 📸",
+      "reaction": "❓"
+    }
+  },
+  
+  "errors": {
+    "unsupported_type": "Maaf, saat ini bot hanya bisa membalas pesan teks. Ketik *HELP* untuk melihat menu.",
+    "general_error": "Maaf, terjadi kesalahan. Silakan coba lagi atau ketik *HELP*."
+  }
+}
