@@ -211,10 +211,30 @@ app.post("/webhook", async (req, res) => {
     }
 
     // Get appropriate reply based on funnel
-    const { message: reply, reaction } = getReply(textBody);
+const { message: reply, reaction } = getReply(textBody);
 
-    // Send reaction to acknowledge receipt
-    await sendReaction(from, messageId, reaction);
+// 🔽 tambahin blok ini
+if (textBody.toLowerCase().includes("konsultasi")) {
+  const adminNumber = "6281392290571"; 
+  
+  // kirim pesan ke user
+  await sendMessage(from, replacePlaceholders(messagesData.funnel.konsultasi.message));
+  
+  // kirim notifikasi ke admin
+  await sendMessage(
+    adminNumber,
+    `📩 Ada user baru minta konsultasi!\nNomor: ${from}\nPesan: "${textBody}"`
+  );
+  
+  // kasih reaction ke user
+  await sendReaction(from, messageId, messagesData.funnel.konsultasi.reaction);
+  
+  return; // stop di sini supaya gak lanjut ke reply umum
+}
+
+// Send reaction to acknowledge receipt
+await sendReaction(from, messageId, reaction);
+
 
     // Simulate typing delay (3-5 seconds for natural feel)
     const delay = Math.floor(Math.random() * 2000);

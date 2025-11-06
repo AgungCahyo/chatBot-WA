@@ -2,10 +2,10 @@
   "ebook_link": "https://lynk.id/your-ebook-link",
   "bonus_link": "https://drive.google.com/your-bonus-link",
   "konsultan_wa": "https://wa.me/628123456789",
-  
+
   "funnel": {
     "welcome": {
-      "message": "Hai, Juragan! 👋\nTerima kasih sudah tertarik sama Ebook Jalan Pintas Juragan Photobox 📸\n\nEbook ini bakal bantu kamu bikin photobox sendiri modal di bawah 5 juta dengan margin sampai 90%!\n\nKetik aja *\"MULAI\"* kalau kamu mau saya kirim link ebook-nya sekarang ✅",
+      "message": "Hai, Juragan! 👋\nTerima kasih sudah tertarik sama Ebook Jalan Pintas Juragan Photobox 📸\n\nEbook ini bakal bantu kamu bikin photobox sendiri modal di bawah 5 juta dengan margin sampai 90%!\n\nKetik aja *\"MULAI\"* kalau kamu mau saya kirim link ebook-nya sekarang ✅\n\nButuh bantuan? Ketik *\"HELP\"* buat lihat semua menu. 💬",
       "reaction": "👋"
     },
     "mulai": {
@@ -33,7 +33,7 @@
       "reaction": "❓"
     }
   },
-  
+
   "errors": {
     "unsupported_type": "Maaf, saat ini bot hanya bisa membalas pesan teks. Ketik *HELP* untuk melihat menu.",
     "general_error": "Maaf, terjadi kesalahan. Silakan coba lagi atau ketik *HELP*."
