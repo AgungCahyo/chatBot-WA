@@ -3,7 +3,12 @@
 import express from "express";
 import axios from "axios";
 import "dotenv/config";
-import messagesData from "./messages.json" assert { type: "json" };
+import fs from "fs";
+
+const messagesData = JSON.parse(
+  fs.readFileSync(new URL("./messages.json", import.meta.url))
+);
+
 
 const app = express();
 app.use(express.json());
