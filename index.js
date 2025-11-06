@@ -82,9 +82,11 @@ async function sendMessage(to, body) {
     log(`✅ Message sent to ${to}`);
     return response.data;
   } catch (err) {
-    log(`❌ Error sending message:`, err.response?.data || err.message);
-    throw err;
-  }
+  log(`❌ Error sending message:`, err.response?.data || err.message);
+  console.error("FULL ERROR:", JSON.stringify(err.response?.data, null, 2));
+  throw err;
+}
+
 }
 
 // Mark message as read
