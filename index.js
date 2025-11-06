@@ -251,3 +251,8 @@ app.listen(PORT, () => {
   log(`🔗 Webhook URL: http://localhost:${PORT}/webhook`);
   log(`💬 Bot: Jalan Pintas Juragan Photobox - Funnel Ready!`);
 });
+
+
+app.get("/", (req, res) => {
+  res.send("✅ WhatsApp Cloud API bot is running!");
+});
