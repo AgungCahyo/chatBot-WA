@@ -49,7 +49,7 @@ const CACHE_CLEANUP_SIZE = 500;
 
 // Konfigurasi rate limit
 const userLastMessageTime = new Map();
-const RATE_LIMIT_WINDOW = 2000; // 2 detik antar pesan
+const RATE_LIMIT_WINDOW = 5000; // 2 detik antar pesan
 
 // FUNGSI UTILITY
 
