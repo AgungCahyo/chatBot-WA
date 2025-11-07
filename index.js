@@ -1,18 +1,16 @@
-// index.js - WhatsApp Cloud API Bot untuk Jalan Pintas Juragan Photobox
+// index.js - Bot WhatsApp Cloud API untuk Jalan Pintas Juragan Photobox
 
 import express from "express";
 import axios from "axios";
 import "dotenv/config";
 import fs from "fs";
 
-// ========================================
-// CONFIGURATION & INITIALIZATION
-// ========================================
+// KONFIGURASI & INISIALISASI
 
 const app = express();
 app.use(express.json());
 
-// Load messages configuration
+// Load konfigurasi pesan
 let messagesData;
 try {
   messagesData = JSON.parse(
@@ -23,7 +21,7 @@ try {
   process.exit(1);
 }
 
-// Environment variables
+// Variabel environment
 const CONFIG = {
   token: process.env.WA_TOKEN,
   phoneID: process.env.PHONE_ID,
@@ -33,35 +31,28 @@ const CONFIG = {
   apiVersion: "v24.0",
 };
 
-// Validate required environment variables
+// Validasi environment variable yang wajib ada
 const requiredEnvVars = ["WA_TOKEN", "PHONE_ID", "VERIFY_TOKEN", "ADMIN_NUMBER"];
 const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
 
 if (missingVars.length > 0) {
-  console.error(`❌ Missing required environment variables: ${missingVars.join(", ")}`);
+  console.error(`❌ Environment variable wajib tidak ditemukan: ${missingVars.join(", ")}`);
   process.exit(1);
 }
 
 const API_URL = `https://graph.facebook.com/${CONFIG.apiVersion}/${CONFIG.phoneID}/messages`;
 
-// In-memory cache for processed messages
+// Cache sementara untuk pesan yang sudah diproses
 const processedMessages = new Set();
 const CACHE_MAX_SIZE = 1000;
 const CACHE_CLEANUP_SIZE = 500;
 
-// Rate limiting configuration
+// Konfigurasi rate limit
 const userLastMessageTime = new Map();
-const RATE_LIMIT_WINDOW = 2000; // 2 seconds between messages
+const RATE_LIMIT_WINDOW = 2000; // 2 detik antar pesan
 
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
+// FUNGSI UTILITY
 
-/**
- * Replace placeholders in message text with actual values
- * @param {string} message - Message template with placeholders
- * @returns {string} - Message with replaced placeholders
- */
 function replacePlaceholders(message) {
   return message
     .replace(/{{ebook_link}}/g, messagesData.ebook_link)
@@ -69,12 +60,6 @@ function replacePlaceholders(message) {
     .replace(/{{konsultan_wa}}/g, messagesData.konsultan_wa);
 }
 
-/**
- * Log with timestamp for better debugging
- * @param {string} level - Log level (INFO, ERROR, WARN)
- * @param {string} message - Log message
- * @param {*} data - Additional data to log
- */
 function log(level = "INFO", message, data = null) {
   const timestamp = new Date().toISOString();
   const logMessage = `[${timestamp}] [${level}] ${message}`;
@@ -88,15 +73,10 @@ function log(level = "INFO", message, data = null) {
   }
 }
 
-/**
- * Determine bot reply based on user text
- * @param {string} text - User message text
- * @returns {Object} - Reply object with message and reaction
- */
 function getReply(text) {
   const normalizedText = text.toLowerCase().trim();
   
-  // Define keywords and their priority (order matters)
+  // Daftar kata kunci dan prioritasnya (urutan penting)
   const keywordMap = [
     { keywords: ["konsultasi", "konsultan", "hubungi"], key: "konsultasi" },
     { keywords: ["autopilot", "franchise", "sistem"], key: "autopilot" },
@@ -106,7 +86,7 @@ function getReply(text) {
     { keywords: ["help", "menu", "bantuan"], key: "help" },
   ];
   
-  // Find matching keyword
+  // Cari kata kunci yang cocok
   for (const { keywords, key } of keywordMap) {
     if (keywords.some(keyword => normalizedText.includes(keyword))) {
       const response = messagesData.funnel[key];
@@ -120,7 +100,7 @@ function getReply(text) {
     }
   }
   
-  // Default to welcome message
+  // Default ke pesan selamat datang
   const welcome = messagesData.funnel.welcome;
   return {
     message: replacePlaceholders(welcome.message),
@@ -129,26 +109,18 @@ function getReply(text) {
   };
 }
 
-/**
- * Clean up message cache when it exceeds limit
- */
 function cleanupCache() {
   if (processedMessages.size > CACHE_MAX_SIZE) {
     const arr = Array.from(processedMessages);
     processedMessages.clear();
     
-    // Keep only the most recent messages
+    // Simpan hanya pesan terbaru
     arr.slice(-CACHE_CLEANUP_SIZE).forEach(id => processedMessages.add(id));
     
-    log("INFO", `🧹 Cache cleaned. Remaining: ${processedMessages.size} messages`);
+    log("INFO", `🧹 Cache dibersihkan. Sisa: ${processedMessages.size} pesan`);
   }
 }
 
-/**
- * Check if user is rate limited
- * @param {string} userId - User phone number
- * @returns {boolean} - True if rate limited
- */
 function isRateLimited(userId) {
   const lastMessageTime = userLastMessageTime.get(userId);
   const now = Date.now();
@@ -161,16 +133,8 @@ function isRateLimited(userId) {
   return false;
 }
 
-// ========================================
-// WHATSAPP API FUNCTIONS
-// ========================================
+// FUNGSI WHATSAPP API
 
-/**
- * Send WhatsApp message
- * @param {string} to - Recipient phone number
- * @param {string} body - Message body
- * @returns {Promise<Object>} - API response
- */
 async function sendMessage(to, body) {
   try {
     const response = await axios.post(
@@ -187,29 +151,24 @@ async function sendMessage(to, body) {
           "Authorization": `Bearer ${CONFIG.token}`,
           "Content-Type": "application/json"
         },
-        timeout: 10000, // 10 second timeout
+        timeout: 10000,
       }
     );
     
-    log("INFO", `✅ Message sent to ${to}`);
+    log("INFO", `✅ Pesan terkirim ke ${to}`);
     return response.data;
   } catch (err) {
     const errorMsg = err.response?.data?.error?.message || err.message;
-    log("ERROR", `❌ Failed to send message to ${to}:`, errorMsg);
+    log("ERROR", `❌ Gagal mengirim pesan ke ${to}:`, errorMsg);
     
-    // Log detailed error for debugging
     if (err.response?.data) {
-      log("ERROR", "API Error Details:", JSON.stringify(err.response.data, null, 2));
+      log("ERROR", "Detail error API:", JSON.stringify(err.response.data, null, 2));
     }
     
     throw err;
   }
 }
 
-/**
- * Mark message as read
- * @param {string} messageId - WhatsApp message ID
- */
 async function markAsRead(messageId) {
   try {
     await axios.post(
@@ -228,18 +187,12 @@ async function markAsRead(messageId) {
       }
     );
     
-    log("INFO", `📖 Message ${messageId} marked as read`);
+    log("INFO", `📖 Pesan ${messageId} ditandai sudah dibaca`);
   } catch (err) {
-    log("WARN", `⚠️ Failed to mark message as read:`, err.response?.data?.error?.message || err.message);
+    log("WARN", `⚠️ Gagal menandai pesan sudah dibaca:`, err.response?.data?.error?.message || err.message);
   }
 }
 
-/**
- * Send reaction to user message
- * @param {string} to - Recipient phone number
- * @param {string} messageId - Message ID to react to
- * @param {string} emoji - Emoji reaction
- */
 async function sendReaction(to, messageId, emoji) {
   try {
     await axios.post(
@@ -263,16 +216,12 @@ async function sendReaction(to, messageId, emoji) {
       }
     );
     
-    log("INFO", `👍 Reaction sent: ${emoji} to ${to}`);
+    log("INFO", `👍 Reaksi ${emoji} terkirim ke ${to}`);
   } catch (err) {
-    log("WARN", `⚠️ Failed to send reaction:`, err.response?.data?.error?.message || err.message);
+    log("WARN", `⚠️ Gagal mengirim reaksi:`, err.response?.data?.error?.message || err.message);
   }
 }
 
-/**
- * Send typing indicator
- * @param {string} to - Recipient phone number
- */
 async function sendTypingIndicator(to) {
   try {
     await axios.post(
@@ -292,51 +241,39 @@ async function sendTypingIndicator(to) {
       }
     );
   } catch (err) {
-    // Silently fail - typing indicator is not critical
-    log("WARN", `⚠️ Failed to send typing indicator`, err.message);
+    log("WARN", `⚠️ Gagal mengirim indikator mengetik`, err.message);
   }
 }
 
-// ========================================
-// WEBHOOK ENDPOINTS
-// ========================================
+// ENDPOINT WEBHOOK
 
-/**
- * GET /webhook - Webhook verification endpoint
- */
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const tokenSent = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  log("INFO", "📥 Webhook verification attempt", { mode, tokenSent });
+  log("INFO", "📥 Percobaan verifikasi webhook", { mode, tokenSent });
 
   if (mode === "subscribe" && tokenSent === CONFIG.verifyToken) {
-    log("INFO", "✅ Webhook verified successfully");
+    log("INFO", "✅ Webhook berhasil diverifikasi");
     return res.status(200).send(challenge);
   }
   
-  log("WARN", "❌ Webhook verification failed - invalid token");
+  log("WARN", "❌ Verifikasi webhook gagal - token salah");
   return res.sendStatus(403);
 });
 
-/**
- * POST /webhook - Handle incoming WhatsApp messages
- */
 app.post("/webhook", async (req, res) => {
-  // Immediately respond to WhatsApp to prevent timeout
-  res.sendStatus(200);
+  res.sendStatus(200); // Respon cepat agar WhatsApp tidak timeout
 
   try {
-    // Extract message data from webhook payload
     const entry = req.body.entry?.[0];
     const change = entry?.changes?.[0];
     const value = change?.value;
     const message = value?.messages?.[0];
 
-    // Ignore non-message events
     if (!message) {
-      log("INFO", "⏭️ Non-message event received, skipping");
+      log("INFO", "⏭️ Event bukan pesan, dilewati");
       return;
     }
 
@@ -345,120 +282,89 @@ app.post("/webhook", async (req, res) => {
     const type = message.type;
     const textBody = message.text?.body || "";
 
-    // Prevent duplicate message processing
     if (processedMessages.has(messageId)) {
-      log("WARN", `⏭️ Duplicate message ignored: ${messageId}`);
+      log("WARN", `⏭️ Pesan duplikat diabaikan: ${messageId}`);
       return;
     }
     
     processedMessages.add(messageId);
     cleanupCache();
 
-    log("INFO", "📨 Incoming message", {
+    log("INFO", "📨 Pesan masuk", {
       from,
       type,
       body: textBody.substring(0, 50) + (textBody.length > 50 ? "..." : ""),
       id: messageId
     });
 
-    // Rate limiting check
     if (isRateLimited(from)) {
-      log("WARN", `⏱️ Rate limit hit for user: ${from}`);
+      log("WARN", `⏱️ Rate limit kena untuk pengguna: ${from}`);
       return;
     }
 
-    // Only handle text messages
     if (type !== "text") {
-      log("WARN", `❌ Unsupported message type: ${type}`);
+      log("WARN", `❌ Tipe pesan tidak didukung: ${type}`);
       await sendMessage(from, messagesData.errors.unsupported_type);
       return;
     }
 
-    // Determine appropriate reply
     const { message: reply, reaction, keyword } = getReply(textBody);
+    log("INFO", `🎯 Kata kunci cocok: ${keyword}`);
 
-    log("INFO", `🎯 Keyword matched: ${keyword}`);
-
-    // Special handling for consultation requests
     if (keyword === "konsultasi") {
       try {
-        // Send typing indicator for better UX
         await sendTypingIndicator(from);
-        
-        // Small delay for natural feel
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Send message to user
         await sendMessage(from, reply);
-        
-        // Notify admin about consultation request
-        const adminNotification = `🔔 *KONSULTASI REQUEST*\n\n` +
+
+        const adminNotification = `🔔 *PERMINTAAN KONSULTASI*\n\n` +
           `👤 Nomor: ${from}\n` +
           `💬 Pesan: "${textBody}"\n` +
           `⏰ Waktu: ${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}\n\n` +
           `Segera follow up untuk closing! 💰`;
         
         await sendMessage(CONFIG.adminNumber, adminNotification);
-        
-        // Send reaction
         await sendReaction(from, messageId, reaction);
         
-        log("INFO", `✅ Consultation request processed for ${from}`);
+        log("INFO", `✅ Permintaan konsultasi diproses untuk ${from}`);
         return;
       } catch (err) {
-        log("ERROR", "❌ Error in consultation flow:", err.message);
+        log("ERROR", "❌ Error saat memproses konsultasi:", err.message);
         await sendMessage(from, messagesData.errors.general_error);
         return;
       }
     }
 
-    // Standard message flow
     try {
-      // Send reaction immediately
       await sendReaction(from, messageId, reaction);
-      
-      // Show typing indicator
       await sendTypingIndicator(from);
-      
-      // Random delay for natural conversation feel (1-3 seconds)
       const delay = Math.floor(Math.random() * 2000) + 1000;
       await new Promise(resolve => setTimeout(resolve, delay));
 
-      log("INFO", `💬 Sending reply for keyword: ${keyword}`);
-
-      // Send reply
+      log("INFO", `💬 Mengirim balasan untuk kata kunci: ${keyword}`);
       await sendMessage(from, reply);
-
-      // Mark as read
       await markAsRead(messageId);
 
-      log("INFO", `✅ Message flow completed for ${from}`);
+      log("INFO", `✅ Alur pesan selesai untuk ${from}`);
     } catch (err) {
-      log("ERROR", "❌ Error in message flow:", err.message);
-      
-      // Try to send error message to user
+      log("ERROR", "❌ Error dalam alur pesan:", err.message);
       try {
         await sendMessage(from, messagesData.errors.general_error);
       } catch (recoveryErr) {
-        log("ERROR", "❌ Failed to send error message to user:", recoveryErr.message);
+        log("ERROR", "❌ Gagal mengirim pesan error ke pengguna:", recoveryErr.message);
       }
     }
 
   } catch (err) {
-    log("ERROR", "❌ Critical error in webhook POST handler:", err.message);
+    log("ERROR", "❌ Error kritis di webhook POST:", err.message);
     if (err.stack) {
       log("ERROR", "Stack trace:", err.stack);
     }
   }
 });
 
-// ========================================
-// HEALTH & STATUS ENDPOINTS
-// ========================================
+// ENDPOINT HEALTH & STATUS
 
-/**
- * GET /health - Health check endpoint
- */
 app.get("/health", (req, res) => {
   const uptime = process.uptime();
   const uptimeFormatted = `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`;
@@ -480,12 +386,9 @@ app.get("/health", (req, res) => {
   });
 });
 
-/**
- * GET / - Root endpoint
- */
 app.get("/", (req, res) => {
   res.json({
-    message: "WhatsApp Cloud API Bot - Jalan Pintas Juragan Photobox",
+    message: "Bot WhatsApp Cloud API - Jalan Pintas Juragan Photobox",
     status: "running",
     version: "2.0.0",
     endpoints: {
@@ -495,9 +398,6 @@ app.get("/", (req, res) => {
   });
 });
 
-/**
- * GET /stats - Statistics endpoint (optional, for monitoring)
- */
 app.get("/stats", (req, res) => {
   res.json({
     processedMessages: processedMessages.size,
@@ -508,37 +408,26 @@ app.get("/stats", (req, res) => {
   });
 });
 
-// ========================================
-// ERROR HANDLING & SERVER STARTUP
-// ========================================
+// ERROR HANDLING & START SERVER
 
-/**
- * Global error handler
- */
 app.use((err, req, res, next) => {
-  log("ERROR", "❌ Unhandled error:", err.message);
+  log("ERROR", "❌ Error tidak tertangani:", err.message);
   res.status(500).json({ 
     error: "Internal server error",
-    message: "An unexpected error occurred"
+    message: "Terjadi kesalahan yang tidak terduga"
   });
 });
 
-/**
- * Handle 404 routes
- */
 app.use((req, res) => {
   res.status(404).json({ 
     error: "Not found",
-    message: "The requested endpoint does not exist"
+    message: "Endpoint yang diminta tidak ditemukan"
   });
 });
 
-/**
- * Start server
- */
 const server = app.listen(CONFIG.port, () => {
   console.log("\n" + "=".repeat(60));
-  log("INFO", "🚀 WhatsApp Bot Server Started");
+  log("INFO", "🚀 Server WhatsApp Bot dimulai");
   console.log("=".repeat(60));
   log("INFO", `📱 Bot: Jalan Pintas Juragan Photobox`);
   log("INFO", `🌐 Port: ${CONFIG.port}`);
@@ -546,31 +435,27 @@ const server = app.listen(CONFIG.port, () => {
   log("INFO", `🔗 Webhook URL: http://localhost:${CONFIG.port}/webhook`);
   log("INFO", `💚 Health Check: http://localhost:${CONFIG.port}/health`);
   console.log("=".repeat(60) + "\n");
-  log("INFO", "✅ Bot is ready to receive messages!");
+  log("INFO", "✅ Bot siap menerima pesan!");
 });
 
-/**
- * Graceful shutdown
- */
+// HANDLE SIGNAL & EXCEPTIONS
+
 process.on("SIGTERM", () => {
-  log("INFO", "🛑 SIGTERM signal received: closing HTTP server");
+  log("INFO", "🛑 SIGTERM diterima: menutup server HTTP");
   server.close(() => {
-    log("INFO", "✅ HTTP server closed");
+    log("INFO", "✅ Server HTTP ditutup");
     process.exit(0);
   });
 });
 
 process.on("SIGINT", () => {
-  log("INFO", "🛑 SIGINT signal received: closing HTTP server");
+  log("INFO", "🛑 SIGINT diterima: menutup server HTTP");
   server.close(() => {
-    log("INFO", "✅ HTTP server closed");
+    log("INFO", "✅ Server HTTP ditutup");
     process.exit(0);
   });
 });
 
-/**
- * Handle uncaught exceptions
- */
 process.on("uncaughtException", (err) => {
   log("ERROR", "❌ Uncaught Exception:", err.message);
   log("ERROR", "Stack:", err.stack);
@@ -578,6 +463,6 @@ process.on("uncaughtException", (err) => {
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  log("ERROR", "❌ Unhandled Rejection at:", promise);
-  log("ERROR", "Reason:", reason);
+  log("ERROR", "❌ Unhandled Rejection di:", promise);
+  log("ERROR", "Alasan:", reason);
 });
